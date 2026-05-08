@@ -38,10 +38,10 @@ This project builds a **production-ready ETL data pipeline** for NYC Citywide Pa
 
 | Property | Value |
 |---|---|
-| 📁 Source | NYC Open Data — Citywide Payroll |
+| 📁 Source | NYC Open Data — Citywide Payroll (Kaggle) |
 | 🗄️ Database | PostgreSQL |
 | 🔢 Total Records | 2,194,488 |
-| 📅 Years Covered | 2014 – 2017 (Full Load) + 2018 (Incremental) |
+| 📅 Years Covered | 2014 – 2018 (Full Load: 2014–2017 + Incremental: 2018) |
 | 🧱 Architecture | Medallion (Raw → Staging → Warehouse) |
 | 🌐 Orchestration | Apache Airflow (Dockerized) |
 
@@ -108,7 +108,7 @@ nyc_payroll/
 │   └── sql_utils.py
 │
 ├── main.py                         → Pipeline entry point
-└── README.md
+└── README.md                       → Project documentation
 ```
 
 ---
@@ -123,6 +123,8 @@ nyc_payroll/
 | `Salary Columns` | Contains `$` signs | Removed using `REPLACE()` |
 | `Pay Basis` | Leading whitespace | Fixed using `TRIM()` |
 | `Duplicates` | 13 duplicate records | Removed using `SELECT DISTINCT` |
+
+> 🔍 Run `profiling/profiling.sql` in pgAdmin for the complete data profiling report.
 
 ---
 
@@ -160,7 +162,7 @@ nyc_payroll/
 ┌──────────────────────────────────────────────────────────────┐
 │                        ETL PIPELINE                          │
 │                                                              │
-│  📥 EXTRACT         🔄 TRANSFORM          📤 LOAD           |
+│  📥 EXTRACT         🔄 TRANSFORM          📤 LOAD           │
 │  ─────────          ───────────          ──────              │
 │  CSV File     →    Remove $ signs   →   dim tables first     │
 │  2.1M rows         Type casting          fact table last     │
@@ -175,7 +177,21 @@ nyc_payroll/
 | **Extract** | CSV (2.1M rows) | `raw.raw_nyc_payroll` | Load as TEXT, no transforms |
 | **Transform** | Raw layer | `stg.stg_nyc_payroll` | Type casting, NULL handling, dedup, cleaning |
 | **Load** | Staging layer | Final warehouse tables | Star schema load, referential integrity |
-| **Incremental** | New CSV files | Warehouse | Batch tracking, upsert logic |
+| **Incremental** | New CSV files | Warehouse | Batch tracking, ON CONFLICT DO NOTHING |
+
+---
+
+## 🛠️ Technologies Used
+
+| Tool | Purpose |
+|---|---|
+| Python | ETL pipeline development |
+| PostgreSQL | Data warehouse storage |
+| psycopg2 | Python-PostgreSQL connection |
+| Apache Airflow | Pipeline orchestration |
+| Docker | Airflow containerization |
+| pgAdmin | Database management |
+| pandas | Data profiling |
 
 ---
 
@@ -193,7 +209,13 @@ pip install psycopg2 pandas
 2. Create a database named: `nyc_payroll`
 3. Update your password in `database/postgresql.py`
 
-### 3️⃣ Run the Pipeline
+### 3️⃣ Place CSV File
+
+```
+data/raw/Citywide_Payroll_Data__Fiscal_Year_.csv
+```
+
+### 4️⃣ Run the Full Load Pipeline
 
 ```bash
 # Activate your virtual environment
@@ -215,6 +237,25 @@ Staging layer loaded!
 STAGING layer loaded successfully
 Final layer loaded!
 WAREHOUSE layer loaded successfully
+Batch 1 started!
+Incremental raw loaded! (5 rows processed)
+Incremental staging loaded!
+Incremental final layer loaded!
+Batch 1 completed successfully!
+```
+
+### 5️⃣ Run Data Profiling
+
+```
+Open profiling/profiling.sql in pgAdmin
+Run queries one by one
+```
+
+### 6️⃣ Run Analysis Queries
+
+```
+Open analysis/analysis.sql in pgAdmin
+Run queries one by one
 ```
 
 ---
@@ -228,8 +269,9 @@ WAREHOUSE layer loaded successfully
 | 👑 Highest Paid Employee | **Scott Evans** — $350,000/yr |
 | 🏢 Highest Paid Role | Pension Investment Advisor, Office of the Comptroller |
 | 🏫 Largest Agency | **DEPT OF ED** — 423,338 employees |
-| 📍 Most Common Work Location | **Manhattan** |
+| 📍 Most Common Location | **Manhattan** — 534,697 employees |
 | 📈 Salary Trend | Increased every year from 2014 → 2018 |
+| ⏱️ Most OT | NYPD has highest overtime hours |
 
 ### 📊 Summary KPIs
 
@@ -238,11 +280,11 @@ WAREHOUSE layer loaded successfully
 💰 Total Payroll      →  $117,000,000,000
 📊 Avg Base Salary    →  $41,100
 ⏱️ Total OT Hours     →  145,000,000 hours
+🏢 Total Agencies     →  165
+👔 Total Job Titles   →  1,963
 ```
 
 > 📂 Run `analysis/analysis.sql` in pgAdmin for the full analytical breakdown.
-
-> 🔍 Run `profiling/profiling.sql` in pgAdmin for the complete data profiling report.
 
 ---
 
@@ -272,13 +314,32 @@ docker compose up -d
 | Property | Value |
 |---|---|
 | DAG ID | `nyc_payroll_pipeline` |
-| Schedule | `@daily` (runs every midnight) |
+| Schedule | `@daily` (runs every midnight automatically) |
+| Task 1 | `extract_raw_layer` — Load CSV to raw table |
+| Task 2 | `transform_stg_layer` — Clean data in staging |
+| Task 3 | `load_warehouse_layer` — Load star schema |
+| Task 4 | `incremental_load` — Load new records only |
 | Task Flow | `extract → transform → load → incremental` |
+
+### Stop Airflow
+
+```bash
+docker compose down
+```
+
+---
+
+## 📦 Dataset
+
+- **Source:** [NYC Citywide Payroll Data — Kaggle](https://www.kaggle.com/datasets/new-york-city/nyc-citywide-payroll-data)
+- **Records:** 2,194,488
+- **Columns:** 16
+- **Years:** 2014 — 2018
 
 ---
 
 <div align="center">
 
-**Built with ❤️ using Python · PostgreSQL · Apache Airflow · Docker**
+**Built with ❤️ by Manoj Adhikari using Python · PostgreSQL · Apache Airflow · Docker**
 
 </div>
