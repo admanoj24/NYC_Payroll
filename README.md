@@ -53,7 +53,7 @@ This project builds a **production-ready ETL data pipeline** for NYC Citywide Pa
 
 | 💼 Total Employees | 💰 Total Payroll Cost | 📊 Avg Base Salary | ⏱️ Total OT Hours |
 |:---:|:---:|:---:|:---:|
-| **798,132** | **$117 Billion** | **$41,100** | **145 Million hrs** |
+| **798,137** | **$117 Billion** | **$41,100** | **145 Million hrs** |
 
 </div>
 
