@@ -137,3 +137,10 @@ SELECT
 FROM stg.stg_nyc_payroll
 GROUP BY pay_basis
 ORDER BY total DESC;
+
+SELECT 
+    work_location_borough,
+    COUNT(DISTINCT employee_id) as employee_count
+FROM final.fact_payroll
+GROUP BY work_location_borough
+ORDER BY employee_count DESC;

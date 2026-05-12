@@ -1,9 +1,4 @@
 
-
-
-
-
-
 -- check all counts
 SELECT COUNT(*) FROM raw.raw_nyc_payroll;
 SELECT COUNT(*) FROM stg.stg_nyc_payroll;
@@ -34,6 +29,7 @@ SELECT 'final.dim_date', COUNT(*) FROM final.dim_date
 UNION ALL
 SELECT 'final.fact_payroll', COUNT(*) FROM final.fact_payroll;
 
+-- check batch history
 SELECT * FROM batch_runs;
 SELECT count(*) FROM batch_runs;
 
@@ -47,9 +43,21 @@ FROM stg.stg_nyc_payroll
 ORDER BY fiscal_year;
 
 
--- check batch history
-SELECT * FROM batch_runs;
 
 
+SELECT * FROM raw.raw_nyc_payroll LIMIT 5;
 
+SELECT column_name 
+FROM information_schema.columns
+WHERE table_name = 'raw_nyc_payroll'
+AND table_schema = 'raw';
 
+-- check if empty strings exist
+SELECT COUNT(*) 
+FROM raw.raw_nyc_payroll
+WHERE mid_init = '';
+
+SELECT
+    COUNT(*) - COUNT(NULLIF(TRIM(mid_init), '')) 
+    AS mid_init_nulls
+FROM raw.raw_nyc_payroll;
